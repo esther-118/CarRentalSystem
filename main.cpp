@@ -129,12 +129,12 @@ int main () {
     }
  */
 
-    sqlite3 *db;
+/*     sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
     //const char* sql[];
 
-    /* Open database */
+    /* Open database 
     rc = sqlite3_open("vehicles.db", &db);
    
     if( rc ) {
@@ -144,13 +144,10 @@ int main () {
     fprintf(stdout, "Opened database successfully\n");
     }
 
-    /* Create SQL statement */
-    const char *sql = "CREATE TABLE VEHICLES("  
-      "ID INT PRIMARY KEY     NOT NULL," 
-      "NAME           TEXT    NOT NULL," 
-      "AVAILABILITY         INTEGER NOT NULL);";
+    /* Create SQL statement 
+    const char *sql = "INSERT INTO vehicles VALUES (1, 'test', 1);";
 
-    /* Execute SQL statement */
+    /* Execute SQL statement 
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     
     if( rc != SQLITE_OK ){
@@ -160,6 +157,28 @@ int main () {
         fprintf(stdout, "Table created successfully\n");
     }
     sqlite3_close(db);
+*/
+
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+
+    rc = sqlite3_open("vehicles.db", &db);
+    
+    if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return(0);
+    } else {
+    fprintf(stdout, "Opened database successfully\n");
+    }
+
+    sqlite3_stmt* stmt;
+    const char* sql_stmt = "SELECT * FROM vehicles";
+    rc = sqlite3_prepare_v2(db, sql_stmt, -1, &stmt, 0);
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        printf("%s %s %s\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
+    }
+
     return 0;
     //g++ main.cpp -lsqlite3
 }
