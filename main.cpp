@@ -162,7 +162,6 @@ int main () {
     sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
-
     rc = sqlite3_open("vehicles.db", &db);
     
     if( rc ) {
@@ -178,6 +177,15 @@ int main () {
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         printf("%s %s %s\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
     }
+
+    string rentID;
+    cout<< "Choose the vehicle you would like to rent. Type in the ID number: " << endl;; cin>> rentID;
+    
+/*     sql_stmt = "UPDATE VEHICLES SET NAME = 'heyo' WHERE ID=" + rentID ;// "; ";
+    rc = sqlite3_exec(db, sql_stmt, callback, 0, &zErrMsg); */
+    int query_state = 0;
+    string sqlQuery = "UPDATE VEHICLES SET NAME = 'heyo' WHERE ID=" + rentID;
+    query_state = sqlite3_exec(db, sqlQuery.c_str(), callback, 0, &zErrMsg);
 
     return 0;
     //g++ main.cpp -lsqlite3
