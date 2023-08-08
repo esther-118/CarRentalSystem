@@ -57,7 +57,8 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 
 int main () {
     string status;
-    cout << "Hello and welcome to our website." << endl;
+    loop:
+    cout << "Car rent/return a car." << endl;
     cout << "Are you a new user? Type YES. If not, type NO to login." << endl;
     cin >> status;
     string username, password;
@@ -84,17 +85,73 @@ int main () {
     if (status == "no" || status == "No" || status == "NO") { // login
         bool login = checkLogin();
         if (!login) {
-            cout << "Invalid login" << endl;
+            cout << "Invalid login. Please select to create an account or login again." << endl;
+            goto loop;
             //system("pause");
             //return 0;
         }
         else {
             cout << "Login successful" << endl;
             success = true;
+            goto mainProgram;
             //system("pause");
             //return 0;
         }
     }
+    mainProgram:
+    
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    rc = sqlite3_open("vehicles.db", &db);
+    
+    if( rc ) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return(0);
+    } else {
+    fprintf(stdout, "Opened database successfully\n");
+    }
+    cout << "ID    Vehicle Name    Availability" << endl;
+    sqlite3_stmt* stmt;
+    const char* sql_stmt = "SELECT * FROM vehicles";
+    rc = sqlite3_prepare_v2(db, sql_stmt, -1, &stmt, 0);
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        printf("%s    %s    %s\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
+    }
+
+    string option;
+    cout << "To rent a vehicle, type rent. To return a rented vehicle, type return."; cin >> option;
+    int query_state = 0;
+    retypeOption:
+    if (option == "rent") {
+        string rentID;
+        cout<< "Choose the vehicle you would like to rent. Type in the ID number: " << endl; cin>> rentID;
+        string sqlQuery = "UPDATE VEHICLES SET AVAILABILITY =0 WHERE ID=" + rentID;
+        query_state = sqlite3_exec(db, sqlQuery.c_str(), callback, 0, &zErrMsg);
+
+        sql_stmt = "SELECT * FROM vehicles";
+        rc = sqlite3_prepare_v2(db, sql_stmt, -1, &stmt, 0);
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("%s    %s    %s\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
+        }
+    }
+    else if (option == "return") {
+        string returnID;
+        cout << "Type in the ID number of the vehicle you would like to return: " << endl; cin >> returnID;
+        string sqlQuery2 = "UPDATE VEHICLES SET AVAILABILITY =1 WHERE ID=" + returnID;
+        query_state = sqlite3_exec(db, sqlQuery2.c_str(), callback, 0, &zErrMsg);
+
+        sql_stmt = "SELECT * FROM vehicles";
+        rc = sqlite3_prepare_v2(db, sql_stmt, -1, &stmt, 0);
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            printf("%s    %s    %s\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
+        }
+    }
+    else {
+        goto retypeOption;
+    }
+
+    return 0;
 
     // ask user if they would like to view a car, rent a car, or return a car. 
 
@@ -158,35 +215,5 @@ int main () {
     }
     sqlite3_close(db);
 */
-
-    sqlite3 *db;
-    char *zErrMsg = 0;
-    int rc;
-    rc = sqlite3_open("vehicles.db", &db);
-    
-    if( rc ) {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        return(0);
-    } else {
-    fprintf(stdout, "Opened database successfully\n");
-    }
-
-    sqlite3_stmt* stmt;
-    const char* sql_stmt = "SELECT * FROM vehicles";
-    rc = sqlite3_prepare_v2(db, sql_stmt, -1, &stmt, 0);
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        printf("%s %s %s\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2));
-    }
-
-    string rentID;
-    cout<< "Choose the vehicle you would like to rent. Type in the ID number: " << endl;; cin>> rentID;
-    
-/*     sql_stmt = "UPDATE VEHICLES SET NAME = 'heyo' WHERE ID=" + rentID ;// "; ";
-    rc = sqlite3_exec(db, sql_stmt, callback, 0, &zErrMsg); */
-    int query_state = 0;
-    string sqlQuery = "UPDATE VEHICLES SET NAME = 'heyo' WHERE ID=" + rentID;
-    query_state = sqlite3_exec(db, sqlQuery.c_str(), callback, 0, &zErrMsg);
-
-    return 0;
     //g++ main.cpp -lsqlite3
 }
